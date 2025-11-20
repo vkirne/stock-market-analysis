@@ -1,0 +1,80 @@
+# Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in your values
+# DO NOT commit terraform.tfvars to version control
+
+# General Configuration
+project_name = "stock-dashboard"
+environment  = "prod"  # dev, staging, or prod
+aws_region   = "us-east-1"
+
+# Network Configuration
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+# ECS Configuration
+ecs_task_cpu       = "512"   # 256, 512, 1024, 2048, 4096
+ecs_task_memory    = "1024"  # 512, 1024, 2048, 4096, 8192
+ecs_desired_count  = 2       # Number of tasks to run
+ecs_container_port = 8080
+
+# GitHub Configuration
+github_owner  = "your-github-username"
+github_repo   = "stock-market-dashboard"
+github_branch = "main"
+
+# Application Configuration (SENSITIVE - Store in AWS Secrets Manager)
+alpha_vantage_api_key = "YOUR_ALPHA_VANTAGE_API_KEY"
+github_token          = "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN"
+
+# Monitoring Configuration
+enable_container_insights = true
+log_retention_days        = 7
+
+# Cost Optimization
+enable_nat_gateway  = true   # Set to false for dev to save costs
+single_nat_gateway  = false  # Set to true for dev to save costs (single NAT)
+
+# ECR Configuration
+ecr_image_retention_count = 10
+
+# ALB Configuration
+alb_health_check_path      = "/"
+alb_health_check_interval  = 30
+alb_health_check_timeout   = 5
+alb_healthy_threshold      = 2
+alb_unhealthy_threshold    = 3
+
+# CodeBuild Configuration
+codebuild_compute_type = "BUILD_GENERAL1_SMALL"
+codebuild_image        = "aws/codebuild/standard:7.0"
+
+# Notification Configuration
+notification_email = "your-email@example.com"
+
+# ========================================
+# Environment-Specific Examples
+# ========================================
+
+# Development Environment
+# environment         = "dev"
+# ecs_desired_count   = 1
+# ecs_task_cpu        = "256"
+# ecs_task_memory     = "512"
+# single_nat_gateway  = true
+# log_retention_days  = 3
+
+# Staging Environment
+# environment         = "staging"
+# ecs_desired_count   = 1
+# ecs_task_cpu        = "512"
+# ecs_task_memory     = "1024"
+# single_nat_gateway  = true
+# log_retention_days  = 7
+
+# Production Environment
+# environment         = "prod"
+# ecs_desired_count   = 2
+# ecs_task_cpu        = "512"
+# ecs_task_memory     = "1024"
+# single_nat_gateway  = false
+# log_retention_days  = 30
