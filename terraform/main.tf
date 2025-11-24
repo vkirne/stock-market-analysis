@@ -131,12 +131,6 @@ module "alb" {
 # IAM Module
 # ========================================
 
-# Note: We need to create artifacts bucket first for IAM module
-resource "aws_s3_bucket" "artifacts_temp" {
-  bucket = "${local.name_prefix}-pipeline-artifacts-temp"
-  tags   = local.common_tags
-}
-
 module "iam" {
   source = "./modules/iam"
 
@@ -147,7 +141,10 @@ module "iam" {
     aws_secretsmanager_secret.github_token.arn
   ]
 
-  artifacts_bucket_arn   = aws_s3_bucket.artifacts_temp.arn
+  # Pass the expected artifacts bucket ARN (created by the codepipeline module)
+  # Constructing the ARN here avoids a module ordering issue while allowing
+  # the IAM role to receive the correct S3 permissions for CodePipeline.
+  artifacts_bucket_arn   = "arn:aws:s3:::${local.name_prefix}-pipeline-artifacts"
 
   tags = local.common_tags
 
