@@ -17,8 +17,9 @@ variable "artifacts_bucket_arn" {
 }
 
 variable "codebuild_project_arn" {
-  description = "ARN of the CodeBuild project"
   type        = string
+  description = "Optional CodeBuild project ARN. Keep null to avoid module dependency cycles."
+  default     = null
 }
 
 variable "enable_codedeploy" {

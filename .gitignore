@@ -8,6 +8,7 @@ venv/
 env/
 ENV/
 .venv
+/terraform/terraform.tfvars
 
 # Streamlit
 .streamlit/

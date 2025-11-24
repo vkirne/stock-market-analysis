@@ -4,7 +4,7 @@
 
 terraform {
   backend "s3" {
-    bucket         = "stock-dashboard-terraform-state"
+    bucket         = "stock-dashboard-terraform-state2"
     key            = "terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true

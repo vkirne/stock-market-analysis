@@ -194,63 +194,71 @@ resource "aws_iam_role" "codepipeline" {
 resource "aws_iam_role_policy" "codepipeline" {
   name = "${var.name_prefix}-codepipeline-policy"
   role = aws_iam_role.codepipeline.id
+  policy = jsonencode(local.codepipeline_policy)
+}
 
-  policy = jsonencode({
+locals {
+  codebuild_statement = var.codebuild_project_arn == null ? [] : [
+    {
+      Effect = "Allow"
+      Action = [
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild"
+      ]
+      Resource = var.codebuild_project_arn
+    }
+  ]
+
+  codepipeline_policy = {
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:PutObject",
-          "s3:GetBucketLocation",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          var.artifacts_bucket_arn,
-          "${var.artifacts_bucket_arn}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "codebuild:BatchGetBuilds",
-          "codebuild:StartBuild"
-        ]
-        Resource = var.codebuild_project_arn
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecs:DescribeServices",
-          "ecs:DescribeTaskDefinition",
-          "ecs:DescribeTasks",
-          "ecs:ListTasks",
-          "ecs:RegisterTaskDefinition",
-          "ecs:UpdateService"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "iam:PassRole"
-        ]
-        Resource = [
-          aws_iam_role.ecs_task_execution.arn,
-          aws_iam_role.ecs_task.arn
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "codestar-connections:UseConnection"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
+    Statement = concat(
+      [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject",
+            "s3:GetObjectVersion",
+            "s3:PutObject",
+            "s3:GetBucketLocation",
+            "s3:ListBucket"
+          ]
+          Resource = [
+            var.artifacts_bucket_arn,
+            "${var.artifacts_bucket_arn}/*"
+          ]
+        }
+      ],
+      local.codebuild_statement,
+      [
+        {
+          Effect = "Allow"
+          # Allow CodePipeline to perform all necessary ECS actions to register
+          # task definitions, update services and query ECS state during deploy.
+          Action = [
+            "ecs:*"
+          ]
+          Resource = "*"
+        },
+        {
+          Effect = "Allow"
+          # Allow CodePipeline to pass the task and execution roles when creating
+          # or updating task definitions. Use a broad resource pattern to avoid
+          # missing a specific role ARN during deploy.
+          Action = [
+            "iam:PassRole"
+          ]
+          Resource = "*"
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "codestar-connections:UseConnection"
+          ]
+          Resource = "*"
+        }
+      ]
+    )
+  }
 }
 
 # ========================================

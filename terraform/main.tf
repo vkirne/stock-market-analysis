@@ -50,7 +50,7 @@ data "aws_availability_zones" "available" {
 
 # Secret for Alpha Vantage API Key
 resource "aws_secretsmanager_secret" "api_key" {
-  name        = "${local.name_prefix}/api-key"
+  name        = "${local.name_prefix}/api-key${var.secret_suffix != "" ? "-" : ""}${var.secret_suffix}"
   description = "Alpha Vantage API key for stock market data"
 
   tags = local.common_tags
@@ -63,7 +63,7 @@ resource "aws_secretsmanager_secret_version" "api_key" {
 
 # Secret for GitHub Token
 resource "aws_secretsmanager_secret" "github_token" {
-  name        = "${local.name_prefix}/github-token"
+  name        = "${local.name_prefix}/github-token${var.secret_suffix != "" ? "-" : ""}${var.secret_suffix}"
   description = "GitHub personal access token for CodePipeline"
 
   tags = local.common_tags
@@ -131,12 +131,6 @@ module "alb" {
 # IAM Module
 # ========================================
 
-# Note: We need to create artifacts bucket first for IAM module
-resource "aws_s3_bucket" "artifacts_temp" {
-  bucket = "${local.name_prefix}-pipeline-artifacts-temp"
-  tags   = local.common_tags
-}
-
 module "iam" {
   source = "./modules/iam"
 
@@ -147,12 +141,42 @@ module "iam" {
     aws_secretsmanager_secret.github_token.arn
   ]
 
-  artifacts_bucket_arn   = aws_s3_bucket.artifacts_temp.arn
-  codebuild_project_arn  = module.codebuild.project_arn
+  # Pass the expected artifacts bucket ARN (created by the codepipeline module)
+  # Constructing the ARN here avoids a module ordering issue while allowing
+  # the IAM role to receive the correct S3 permissions for CodePipeline.
+  artifacts_bucket_arn   = "arn:aws:s3:::${local.name_prefix}-pipeline-artifacts"
+  
+  # Pass constructed CodeBuild project ARN so the CodePipeline role can
+  # call codebuild:StartBuild without creating a module dependency cycle.
+  codebuild_project_arn = "arn:aws:codebuild:${var.aws_region}:${data.aws_caller_identity.current.account_id}:project/${local.name_prefix}-build"
 
   tags = local.common_tags
 
-  depends_on = [module.codebuild]
+}
+
+# Ensure ECS task execution role can read the Secrets Manager secrets.
+# This policy is added here to be explicit and to cover any timing/order
+# issues where the role might not have had the secret access at deploy time.
+resource "aws_iam_role_policy" "ecs_allow_secrets_read" {
+  name = "${local.name_prefix}-ecs-allow-secrets-read"
+  role = module.iam.ecs_task_execution_role_name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = [
+          aws_secretsmanager_secret.api_key.arn,
+          aws_secretsmanager_secret.github_token.arn
+        ]
+      }
+    ]
+  })
 }
 
 # ========================================
@@ -208,6 +232,7 @@ module "codebuild" {
   service_role_arn  = module.iam.codebuild_role_arn
   compute_type      = var.codebuild_compute_type
   image             = var.codebuild_image
+  cache_type        = "NO_CACHE"
 
   ecr_registry_url    = split("/", module.ecr.repository_url)[0]
   ecr_repository_name = module.ecr.repository_name

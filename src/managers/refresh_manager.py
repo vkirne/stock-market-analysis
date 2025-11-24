@@ -8,7 +8,7 @@ from typing import Dict
 def initialize_refresh_state():
     """Initialize auto-refresh state in session state if not exists."""
     if 'auto_refresh' not in st.session_state:
-        st.session_state.auto_refresh = {
+        st.session_state['auto_refresh'] = {
             'enabled': True,
             'interval': 60,  # seconds
             'last_refresh_time': datetime.now(),
@@ -25,8 +25,8 @@ def toggle_refresh() -> bool:
         New state (True if enabled, False if disabled)
     """
     initialize_refresh_state()
-    st.session_state.auto_refresh['enabled'] = not st.session_state.auto_refresh['enabled']
-    return st.session_state.auto_refresh['enabled']
+    st.session_state['auto_refresh']['enabled'] = not st.session_state['auto_refresh']['enabled']
+    return st.session_state['auto_refresh']['enabled']
 
 
 def is_refresh_enabled() -> bool:
@@ -37,7 +37,7 @@ def is_refresh_enabled() -> bool:
         True if auto-refresh is enabled, False otherwise
     """
     initialize_refresh_state()
-    return st.session_state.auto_refresh['enabled']
+    return st.session_state['auto_refresh']['enabled']
 
 
 def get_refresh_interval() -> int:
@@ -48,7 +48,7 @@ def get_refresh_interval() -> int:
         Refresh interval in seconds
     """
     initialize_refresh_state()
-    return st.session_state.auto_refresh['interval']
+    return st.session_state['auto_refresh']['interval']
 
 
 def set_refresh_interval(seconds: int) -> bool:
@@ -67,7 +67,7 @@ def set_refresh_interval(seconds: int) -> bool:
     if seconds < 10 or seconds > 300:
         return False
     
-    st.session_state.auto_refresh['interval'] = seconds
+    st.session_state['auto_refresh']['interval'] = seconds
     return True
 
 
@@ -81,17 +81,17 @@ def should_refresh() -> bool:
     initialize_refresh_state()
     
     # Don't refresh if disabled
-    if not st.session_state.auto_refresh['enabled']:
+    if not st.session_state['auto_refresh']['enabled']:
         return False
     
     # Don't refresh if currently refreshing
-    if st.session_state.auto_refresh['is_refreshing']:
+    if st.session_state['auto_refresh']['is_refreshing']:
         return False
     
     # Check if enough time has passed
-    time_since_refresh = (datetime.now() - st.session_state.auto_refresh['last_refresh_time']).total_seconds()
+    time_since_refresh = (datetime.now() - st.session_state['auto_refresh']['last_refresh_time']).total_seconds()
     
-    return time_since_refresh >= st.session_state.auto_refresh['interval']
+    return time_since_refresh >= st.session_state['auto_refresh']['interval']
 
 
 def get_countdown() -> int:
@@ -103,11 +103,11 @@ def get_countdown() -> int:
     """
     initialize_refresh_state()
     
-    if not st.session_state.auto_refresh['enabled']:
+    if not st.session_state['auto_refresh']['enabled']:
         return 0
     
-    time_since_refresh = (datetime.now() - st.session_state.auto_refresh['last_refresh_time']).total_seconds()
-    countdown = st.session_state.auto_refresh['interval'] - time_since_refresh
+    time_since_refresh = (datetime.now() - st.session_state['auto_refresh']['last_refresh_time']).total_seconds()
+    countdown = st.session_state['auto_refresh']['interval'] - time_since_refresh
     
     return max(0, int(countdown))
 
@@ -115,15 +115,15 @@ def get_countdown() -> int:
 def mark_refreshed():
     """Mark that a refresh has occurred."""
     initialize_refresh_state()
-    st.session_state.auto_refresh['last_refresh_time'] = datetime.now()
-    st.session_state.auto_refresh['refresh_count'] += 1
-    st.session_state.auto_refresh['is_refreshing'] = False
+    st.session_state['auto_refresh']['last_refresh_time'] = datetime.now()
+    st.session_state['auto_refresh']['refresh_count'] += 1
+    st.session_state['auto_refresh']['is_refreshing'] = False
 
 
 def start_refreshing():
     """Mark that a refresh is in progress."""
     initialize_refresh_state()
-    st.session_state.auto_refresh['is_refreshing'] = True
+    st.session_state['auto_refresh']['is_refreshing'] = True
 
 
 def is_refreshing() -> bool:
@@ -134,7 +134,7 @@ def is_refreshing() -> bool:
         True if refreshing, False otherwise
     """
     initialize_refresh_state()
-    return st.session_state.auto_refresh['is_refreshing']
+    return st.session_state['auto_refresh']['is_refreshing']
 
 
 def get_refresh_count() -> int:
@@ -145,7 +145,7 @@ def get_refresh_count() -> int:
         Number of refreshes
     """
     initialize_refresh_state()
-    return st.session_state.auto_refresh['refresh_count']
+    return st.session_state['auto_refresh']['refresh_count']
 
 
 def get_last_refresh_time() -> datetime:
@@ -156,7 +156,7 @@ def get_last_refresh_time() -> datetime:
         Datetime of last refresh
     """
     initialize_refresh_state()
-    return st.session_state.auto_refresh['last_refresh_time']
+    return st.session_state['auto_refresh']['last_refresh_time']
 
 
 def get_time_since_refresh() -> int:
@@ -167,13 +167,13 @@ def get_time_since_refresh() -> int:
         Seconds since last refresh
     """
     initialize_refresh_state()
-    return int((datetime.now() - st.session_state.auto_refresh['last_refresh_time']).total_seconds())
+    return int((datetime.now() - st.session_state['auto_refresh']['last_refresh_time']).total_seconds())
 
 
 def reset_refresh_state():
     """Reset refresh state to defaults."""
     if 'auto_refresh' in st.session_state:
-        del st.session_state.auto_refresh
+        del st.session_state['auto_refresh']
     initialize_refresh_state()
 
 
@@ -186,11 +186,11 @@ def get_refresh_state() -> Dict:
     """
     initialize_refresh_state()
     return {
-        'enabled': st.session_state.auto_refresh['enabled'],
-        'interval': st.session_state.auto_refresh['interval'],
-        'last_refresh_time': st.session_state.auto_refresh['last_refresh_time'],
-        'refresh_count': st.session_state.auto_refresh['refresh_count'],
-        'is_refreshing': st.session_state.auto_refresh['is_refreshing'],
+        'enabled': st.session_state['auto_refresh']['enabled'],
+        'interval': st.session_state['auto_refresh']['interval'],
+        'last_refresh_time': st.session_state['auto_refresh']['last_refresh_time'],
+        'refresh_count': st.session_state['auto_refresh']['refresh_count'],
+        'is_refreshing': st.session_state['auto_refresh']['is_refreshing'],
         'countdown': get_countdown(),
         'time_since_refresh': get_time_since_refresh()
     }

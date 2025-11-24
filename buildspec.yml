@@ -47,9 +47,22 @@ phases:
           echo "No test files found, skipping tests..."
         fi
       
-      # Build Docker image
+      # Build Docker image (look for Dockerfile in possible locations)
       - echo "Building Docker image..."
-      - docker build -t $ECR_REPOSITORY:latest -f Dockerfile .
+      # Pre-pull base image from Amazon ECR Public to avoid Docker Hub rate limits
+      - echo "Pulling base image from public ECR (fallback if already cached)..."
+      - docker pull public.ecr.aws/docker/library/python:3.11-slim || true
+      - |
+        if [ -f Dockerfile ]; then
+          docker build -t $ECR_REPOSITORY:latest -f Dockerfile .
+        elif [ -f ../Dockerfile ]; then
+          docker build -t $ECR_REPOSITORY:latest -f ../Dockerfile ..
+        elif [ -f docker/Dockerfile ]; then
+          docker build -t $ECR_REPOSITORY:latest -f docker/Dockerfile ..
+        else
+          echo "Dockerfile not found in current, parent, or docker/ directory."
+          exit 1
+        fi
       
       # Tag image with commit hash and latest
       - docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -96,4 +109,5 @@ artifacts:
 cache:
   paths:
     - '/root/.cache/pip/**/*'
-    - '/var/lib/docker/**/*'
+    # Do not cache Docker runtime files (e.g. /var/lib/docker) in CodeBuild;
+    # caching these can cause overlay mount errors in the managed environment.
