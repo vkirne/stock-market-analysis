@@ -8,11 +8,11 @@ from datetime import datetime
 def initialize_watchlist():
     """Initialize watchlist in session state if not exists."""
     if 'watchlist' not in st.session_state:
-        st.session_state.watchlist = []
+        st.session_state['watchlist'] = []
     if 'watchlist_last_updated' not in st.session_state:
-        st.session_state.watchlist_last_updated = datetime.now()
+        st.session_state['watchlist_last_updated'] = datetime.now()
     if 'watchlist_max_size' not in st.session_state:
-        st.session_state.watchlist_max_size = 20
+        st.session_state['watchlist_max_size'] = 20
 
 
 def add_to_watchlist(symbol: str) -> bool:
@@ -28,16 +28,16 @@ def add_to_watchlist(symbol: str) -> bool:
     initialize_watchlist()
     
     # Check if already in watchlist
-    if symbol in st.session_state.watchlist:
+    if symbol in st.session_state['watchlist']:
         return False
     
     # Check if watchlist is full
-    if len(st.session_state.watchlist) >= st.session_state.watchlist_max_size:
+    if len(st.session_state['watchlist']) >= st.session_state['watchlist_max_size']:
         return False
     
     # Add to watchlist
-    st.session_state.watchlist.append(symbol)
-    st.session_state.watchlist_last_updated = datetime.now()
+    st.session_state['watchlist'].append(symbol)
+    st.session_state['watchlist_last_updated'] = datetime.now()
     
     return True
 
@@ -54,9 +54,9 @@ def remove_from_watchlist(symbol: str) -> bool:
     """
     initialize_watchlist()
     
-    if symbol in st.session_state.watchlist:
-        st.session_state.watchlist.remove(symbol)
-        st.session_state.watchlist_last_updated = datetime.now()
+    if symbol in st.session_state['watchlist']:
+        st.session_state['watchlist'].remove(symbol)
+        st.session_state['watchlist_last_updated'] = datetime.now()
         return True
     
     return False
@@ -70,7 +70,7 @@ def get_watchlist() -> List[str]:
         Sorted list of stock symbols in watchlist
     """
     initialize_watchlist()
-    return sorted(st.session_state.watchlist)
+    return sorted(st.session_state['watchlist'])
 
 
 def is_in_watchlist(symbol: str) -> bool:
@@ -84,7 +84,7 @@ def is_in_watchlist(symbol: str) -> bool:
         True if symbol is in watchlist, False otherwise
     """
     initialize_watchlist()
-    return symbol in st.session_state.watchlist
+    return symbol in st.session_state['watchlist']
 
 
 def get_watchlist_count() -> int:
@@ -95,7 +95,7 @@ def get_watchlist_count() -> int:
         Number of stocks in watchlist
     """
     initialize_watchlist()
-    return len(st.session_state.watchlist)
+    return len(st.session_state['watchlist'])
 
 
 def get_watchlist_max_size() -> int:
@@ -106,7 +106,7 @@ def get_watchlist_max_size() -> int:
         Maximum number of stocks allowed in watchlist
     """
     initialize_watchlist()
-    return st.session_state.watchlist_max_size
+    return st.session_state['watchlist_max_size']
 
 
 def is_watchlist_full() -> bool:
@@ -117,7 +117,7 @@ def is_watchlist_full() -> bool:
         True if watchlist is full, False otherwise
     """
     initialize_watchlist()
-    return len(st.session_state.watchlist) >= st.session_state.watchlist_max_size
+    return len(st.session_state['watchlist']) >= st.session_state['watchlist_max_size']
 
 
 def clear_watchlist() -> bool:
@@ -128,8 +128,8 @@ def clear_watchlist() -> bool:
         True if cleared successfully
     """
     initialize_watchlist()
-    st.session_state.watchlist = []
-    st.session_state.watchlist_last_updated = datetime.now()
+    st.session_state['watchlist'] = []
+    st.session_state['watchlist_last_updated'] = datetime.now()
     return True
 
 
@@ -141,4 +141,4 @@ def get_last_updated() -> datetime:
         Datetime of last watchlist modification
     """
     initialize_watchlist()
-    return st.session_state.watchlist_last_updated
+    return st.session_state['watchlist_last_updated']
