@@ -30,9 +30,22 @@ class TestApiService:
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
         
-        result = api_service.fetch_intraday_data("IBM", "5min")
+        # fetch_intraday_data now returns (response, is_demo) tuple
+        result, is_demo = api_service.fetch_intraday_data("IBM", "5min")
         assert result is not None
         assert "Time Series (5min)" in result
+        assert is_demo is False  # Should not be demo data when API succeeds
+    
+    @patch('src.services.api_service.requests.get')
+    def test_fetch_intraday_data_fallback_to_demo(self, mock_get):
+        """Test fallback to demo data when API fails."""
+        # Mock failed response (connection error)
+        mock_get.side_effect = Exception("Connection error")
+        
+        # Should return None and is_demo=True
+        result, is_demo = api_service.fetch_intraday_data("IBM", "5min")
+        assert result is None
+        assert is_demo is True
     
     def test_parse_time_series(self):
         """Test time series parsing."""
@@ -59,3 +72,13 @@ class TestApiService:
         assert not df.empty
         assert len(df) == 2
         assert list(df.columns) == ['open', 'high', 'low', 'close', 'volume']
+    
+    def test_parse_time_series_with_demo_data(self):
+        """Test parsing with demo data fallback."""
+        # When response is None, should generate demo data
+        df = api_service.parse_time_series(None, symbol="AAPL", interval="5min")
+        assert not df.empty
+        assert list(df.columns) == ['open', 'high', 'low', 'close', 'volume']
+        # Demo data should have reasonable values
+        assert df['close'].min() > 0
+        assert df['volume'].min() > 0
