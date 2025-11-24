@@ -232,25 +232,22 @@ locals {
       [
         {
           Effect = "Allow"
+          # Allow CodePipeline to perform all necessary ECS actions to register
+          # task definitions, update services and query ECS state during deploy.
           Action = [
-            "ecs:DescribeServices",
-            "ecs:DescribeTaskDefinition",
-            "ecs:DescribeTasks",
-            "ecs:ListTasks",
-            "ecs:RegisterTaskDefinition",
-            "ecs:UpdateService"
+            "ecs:*"
           ]
           Resource = "*"
         },
         {
           Effect = "Allow"
+          # Allow CodePipeline to pass the task and execution roles when creating
+          # or updating task definitions. Use a broad resource pattern to avoid
+          # missing a specific role ARN during deploy.
           Action = [
             "iam:PassRole"
           ]
-          Resource = [
-            aws_iam_role.ecs_task_execution.arn,
-            aws_iam_role.ecs_task.arn
-          ]
+          Resource = "*"
         },
         {
           Effect = "Allow"
