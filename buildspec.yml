@@ -109,5 +109,6 @@ artifacts:
 cache:
   paths:
     - '/root/.cache/pip/**/*'
+  EXPOSE: 8082:8080
     # Do not cache Docker runtime files (e.g. /var/lib/docker) in CodeBuild;
     # caching these can cause overlay mount errors in the managed environment.
